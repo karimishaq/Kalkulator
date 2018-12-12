@@ -15,6 +15,40 @@ int operasiku=0;
 char tanda[10];
 
 static char tombol[16][5]={"AC", "C", "<=", "+", "1", "2", "3", "-", "4", "5", "6", ":", "7", "8", "9", "x"};
+GtkWidget *win=NULL;
+
+static void dialog_tentang( gchar *s){
+GtkWidget *dialog = NULL;
+  dialog = gtk_message_dialog_new (GTK_WINDOW (win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "Dibuat oleh Gerimisya Stela Rida");
+  gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
+}
+
+int tambah_angka(char *angka){
+char s[50]="";
+int pj=0;
+    if(gtk_label_get_text(GTK_LABEL(slabel))){
+        strcpy(s, gtk_label_get_text(GTK_LABEL(slabel)));
+        pj=strlen(s)<10;
+        if(pj>0 && pj<10){
+            if((s[0]=='0' && s[1]!=',') || ubah!=0)s[0]=0;
+            strcat(s, angka);
+            ubah=0;
+            gtk_label_set_label(GTK_LABEL(slabel), s);
+        }
+    }
+    return 0;
+}
+
+int tombol_keyboard(GtkWidget *wid, GdkEventKey *evt, gpointer user_data){
+char s[50];
+    if(evt->keyval>='0' && evt->keyval<='9'){
+        sprintf(s, "%d", evt->keyval-'0');
+        tambah_angka(s);
+    }
+    return 0;
+}
 
 int hilangkan_nol(char *s){
 int pos;
@@ -33,7 +67,7 @@ int pos;
 }
 
 int hitung(GtkWidget *wid, int operasi){
-char tmp[100]="0";
+char tmp[50]="0";
 int n;
     if(gtk_label_get_text(GTK_LABEL(slabel)) && ubah==0){
         switch(operasi){
@@ -119,8 +153,8 @@ static void hapus_semua (GtkWidget *wid, GtkWidget *win){
 static void hapus_angka (GtkWidget *wid, GtkWidget *win){
 char s[100], tmp[100]="";
 int pj=0;
-  strcpy(s, gtk_label_get_label(GTK_LABEL(slabel)));
   if(gtk_label_get_text(GTK_LABEL(slabel))){
+    strcpy(s, gtk_label_get_label(GTK_LABEL(slabel)));
     pj=strlen(s);
     strcpy(tmp, s);
     if(s[0]!='0'){
@@ -132,19 +166,10 @@ int pj=0;
 }
 
 static void isi_angka (GtkWidget *wid, GtkWidget *win){
-char s[100], tmp[100]="";
-    if(gtk_label_get_text(GTK_LABEL(slabel))){
-        strcpy(s, gtk_label_get_text(GTK_LABEL(slabel)));
-        if(strlen(s)<10){
-            if(s[0]!='0' || s[1]==',')strcpy(tmp, s);
-            if(ubah!=0){
-                ubah=0;
-                strcpy(tmp, gtk_button_get_label(GTK_LABEL(wid)));
-            }else{
-                strcat(tmp, gtk_button_get_label(GTK_LABEL(wid)));
-            }
-            gtk_label_set_label(GTK_LABEL(slabel), tmp);
-        }
+char s[100]="";
+    if(gtk_button_get_label(GTK_LABEL(wid))){
+        strcpy(s, gtk_button_get_label(GTK_LABEL(wid)));
+        tambah_angka(s);
     }
 }
 
@@ -162,10 +187,14 @@ char s[100], tmp[100]="";
 
 int main (int argc, char *argv[]){
     GtkWidget *button = NULL;
-    GtkWidget *win = NULL;
     GtkWidget *vbox = NULL;
     GtkWidget *hbox = NULL;
-    char *s;
+    GtkWidget *menu=NULL;
+    GtkWidget *menu_bar=NULL;
+    GtkWidget *menu_item=NULL;
+    GtkWidget *root_menu=NULL;
+    char buf[128]="Dibuat oleh Gerimisya Stela Rida";
+    char *s=NULL;
     int i;
 
     /* Initialize GTK+ */
@@ -180,9 +209,26 @@ int main (int argc, char *argv[]){
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", gtk_main_quit, NULL);
+
+    menu_bar=gtk_menu_bar_new();
+
+    root_menu = gtk_menu_item_new_with_label ("Bantuan");
+    gtk_widget_show (root_menu);
+    menu=gtk_menu_new();
+    menu_item = gtk_menu_item_new_with_label ("Tentang");
+    gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
+    gtk_menu_item_set_submenu(root_menu, menu);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menu_bar), root_menu);
+    gtk_widget_show (menu_bar);
+
+    g_signal_connect_swapped (menu_item, "activate", G_CALLBACK (dialog_tentang), (gpointer) g_strdup (buf));
+
     /* Create a vertical box with buttons */
-    vbox = gtk_vbox_new (TRUE, 6);
+    vbox = gtk_vbox_new (TRUE, 0);
     gtk_container_add (GTK_CONTAINER (win), vbox);
+
+    gtk_box_pack_start (GTK_BOX (vbox), menu_bar, FALSE, FALSE, 2);
+    gtk_widget_show (menu_bar);
 
     hbox = gtk_hbox_new (TRUE, 6);
     gtk_container_add (GTK_CONTAINER(vbox), hbox);
@@ -248,6 +294,8 @@ int main (int argc, char *argv[]){
     button = gtk_button_new_with_label("=");
     g_signal_connect (button, "clicked", G_CALLBACK (sama_dengan), NULL);
     gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
+
+    g_signal_connect (G_OBJECT(win), "key_press_event", G_CALLBACK (tombol_keyboard), NULL);
 
     /* Enter the main loop */
     gtk_widget_set_usize(vbox, 240, 240);
