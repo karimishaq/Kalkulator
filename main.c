@@ -204,7 +204,7 @@ int main (int argc, char *argv[]){
 
     /* Create the main window */
     win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_container_set_border_width (GTK_CONTAINER (win), 8);
+    gtk_container_set_border_width (GTK_CONTAINER (win), 2);
     gtk_window_set_title (GTK_WINDOW (win), "Kalkulator");
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_widget_realize (win);
@@ -224,7 +224,7 @@ int main (int argc, char *argv[]){
     g_signal_connect_swapped (menu_item, "activate", G_CALLBACK (dialog_tentang), (gpointer) g_strdup (buf));
 
     /* Create a vertical box with buttons */
-    vbox = gtk_vbox_new (TRUE, 0);
+    vbox = gtk_vbox_new (TRUE, 6);
     gtk_container_add (GTK_CONTAINER (win), vbox);
 
     gtk_box_pack_start (GTK_BOX (vbox), menu_bar, FALSE, FALSE, 2);
